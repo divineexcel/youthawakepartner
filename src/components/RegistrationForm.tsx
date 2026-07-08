@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Loader2, Heart, MessageSquare, AlertCircle } from 'lucide-react';
+import { Search, Loader2, Heart, MessageSquare, AlertCircle, Check, Copy, Info, Lock, Building } from 'lucide-react';
 import SuccessScreen from './SuccessScreen';
 
 const NIGERIAN_STATES = [
@@ -46,6 +46,26 @@ export default function RegistrationForm() {
   });
 
   const [errors, setErrors] = useState<Partial<FormState>>({});
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const paymentCardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (form.monthlyCommitment && paymentCardRef.current) {
+      const timer = setTimeout(() => {
+        paymentCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [form.monthlyCommitment]);
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    setToastMessage(`✅ ${label} copied successfully!`);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2500);
+  };
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -452,7 +472,7 @@ export default function RegistrationForm() {
               Monthly Partnership Commitment <span className="text-brand-gold">*</span>
             </label>
             <p className="font-poppins text-slate-400 text-xs mt-1">
-              Select your preferred monthly donation tier to support the outreach mandate.
+              Select your preferred monthly partnership amount to support the advancement of God's work among the youth.
             </p>
           </div>
 
@@ -464,14 +484,23 @@ export default function RegistrationForm() {
                   key={val}
                   type="button"
                   onClick={() => handleInputChange('monthlyCommitment', val)}
-                  className={`p-4 rounded-xl border font-poppins font-semibold text-sm transition-all duration-300 ${
+                  className={`p-4 rounded-xl border font-poppins font-semibold text-sm transition-all duration-300 relative overflow-hidden flex items-center justify-center gap-2 transform hover:scale-[1.02] active:scale-[0.98] ${
                     isSelected
                       ? 'gold-glow-active bg-brand-gold/10 text-brand-gold'
                       : 'border-white/5 bg-white/[0.02] text-slate-300 hover:border-white/20 hover:bg-white/[0.04]'
                   }`}
                   disabled={isSubmitting}
                 >
-                  {val}
+                  <span>{val}</span>
+                  {isSelected && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                    >
+                      <Check className="h-4 w-4 stroke-[3]" />
+                    </motion.span>
+                  )}
                 </button>
               );
             })}
@@ -482,6 +511,125 @@ export default function RegistrationForm() {
               <span>{errors.monthlyCommitment}</span>
             </p>
           )}
+
+          {/* Dynamic Payment Card & Selected Badge */}
+          <AnimatePresence>
+            {form.monthlyCommitment && (
+              <motion.div
+                ref={paymentCardRef}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                className="mt-6 space-y-6"
+              >
+                {/* Highlighted Badge */}
+                <div className="p-4 bg-brand-gold/10 border border-brand-gold/30 text-brand-gold text-sm font-poppins rounded-xl font-semibold flex items-center justify-center text-center shadow-inner">
+                  🎉 You have chosen to partner with {form.monthlyCommitment} monthly. Thank you for supporting the Youth Awake outreach mandate!
+                </div>
+
+                {/* Premium Payment Card */}
+                <div className="glassmorphism border border-brand-gold/30 p-6 sm:p-8 rounded-2xl relative overflow-hidden shadow-2xl">
+                  {/* Subtle ambient glow inside card */}
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-brand-gold/5 rounded-full blur-xl pointer-events-none" />
+                  
+                  {/* Title & Description */}
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 mb-6">
+                    <div className="p-3 bg-brand-gold/15 rounded-xl border border-brand-gold/30 text-brand-gold">
+                      <Building className="h-6 w-6" />
+                    </div>
+                    <div className="text-center sm:text-left space-y-1">
+                      <h4 className="font-montserrat font-bold text-lg text-white">
+                        Complete Your Partnership
+                      </h4>
+                      <p className="font-poppins text-xs sm:text-sm text-slate-300">
+                        Thank you for choosing to partner with Youth Awake Financial Giants. Kindly use the account details below to make your monthly partnership donation.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Payment Details Box */}
+                  <div className="bg-white/[0.02] border border-white/5 rounded-xl p-5 space-y-4 mb-6">
+                    {/* Bank Name */}
+                    <div className="flex items-center justify-between py-1.5 border-b border-white/5">
+                      <span className="font-poppins text-xs text-slate-400">Bank Name</span>
+                      <span className="font-poppins text-sm font-semibold text-slate-200">Moniepoint Microfinance Bank</span>
+                    </div>
+
+                    {/* Account Name */}
+                    <div className="flex items-center justify-between py-1.5 border-b border-white/5">
+                      <span className="font-poppins text-xs text-slate-400">Account Name</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-poppins text-sm font-semibold text-slate-200">Chinenye Racheal Igweokolo</span>
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard('Chinenye Racheal Igweokolo', 'Account Name')}
+                          className="text-slate-400 hover:text-brand-gold p-1 hover:bg-white/5 rounded transition-colors"
+                          title="Copy Account Name"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Account Number */}
+                    <div className="flex items-center justify-between py-1.5">
+                      <span className="font-poppins text-xs text-slate-400">Account Number</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-poppins text-base font-bold text-brand-gold tracking-wider">9078382145</span>
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard('9078382145', 'Account Number')}
+                          className="text-slate-400 hover:text-brand-gold p-1 hover:bg-white/5 rounded transition-colors"
+                          title="Copy Account Number"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Action Buttons */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard('9078382145', 'Account Number')}
+                      className="py-3 px-4 rounded-xl border border-white/10 hover:border-brand-gold/40 hover:bg-brand-gold/5 font-poppins font-semibold text-xs sm:text-sm text-slate-200 hover:text-brand-gold transition-all"
+                    >
+                      Copy Account Number
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const details = `Youth Awake Financial Giants Partnership\nBank: Moniepoint Microfinance Bank\nAccount Name: Chinenye Racheal Igweokolo\nAccount Number: 9078382145`;
+                        copyToClipboard(details, 'All Payment Details');
+                      }}
+                      className="py-3 px-4 rounded-xl border border-white/10 hover:border-brand-gold/40 hover:bg-brand-gold/5 font-poppins font-semibold text-xs sm:text-sm text-slate-200 hover:text-brand-gold transition-all"
+                    >
+                      Copy All Payment Details
+                    </button>
+                  </div>
+
+                  {/* Payment Confirmation Notice */}
+                  <div className="p-4 bg-[#0a2e73]/30 border border-[#0a2e73]/50 text-slate-300 text-xs sm:text-sm font-poppins rounded-xl flex items-start gap-3 shadow-inner">
+                    <Info className="h-5 w-5 text-brand-blue-light flex-shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <h5 className="font-bold text-white">After Making Your Transfer</h5>
+                      <p className="leading-relaxed text-slate-300">
+                        Kindly complete and submit this registration form after making your transfer. Our team will review your registration and contact you if necessary. Your partnership helps advance God's Kingdom and impact the lives of young people.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Secure visual indicator at bottom right */}
+                  <div className="flex items-center justify-end gap-1.5 text-slate-500 text-xxs font-poppins uppercase tracking-wider mt-4">
+                    <Lock className="h-3 w-3" />
+                    <span>Secure Kingdom Transaction</span>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Question: WhatsApp Community */}
@@ -587,6 +735,20 @@ export default function RegistrationForm() {
         </div>
 
       </form>
+
+      {/* Floating Toast Notification */}
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-6 right-6 z-50 bg-[#0c2f16] border border-emerald-500/30 text-emerald-200 px-5 py-3 rounded-2xl shadow-2xl shadow-black/80 font-poppins text-sm flex items-center gap-2"
+          >
+            <span>{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
