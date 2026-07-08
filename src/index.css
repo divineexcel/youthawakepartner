@@ -26,6 +26,9 @@
 }
 
 @layer base {
+  html, body {
+    @apply w-full overflow-x-hidden max-w-full;
+  }
   body {
     @apply bg-[#030d22] text-slate-100 font-sans selection:bg-brand-gold selection:text-[#030d22];
   }
@@ -76,5 +79,6 @@
 
 /* Smooth Scrolling Offset */
 html {
+  scroll-smooth: always;
   scroll-padding-top: 80px; /* navbar height */
 }
